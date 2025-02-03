@@ -1,66 +1,82 @@
 # Next.js Interceptor
 
-一个强大而灵活的 Next.js 中间件拦截器，用于处理请求和响应的操作。
+A powerful and flexible Next.js middleware interceptor for handling request and response operations.
 
-## 特性
+## Features
 
-- 🚀 基于 Next.js Middleware 构建
-- 🛡️ 支持请求和响应的拦截和修改
-- 🔄 灵活的中间件链式调用
-- 📦 TypeScript 支持
-- 🎯 零配置，即插即用
-- 🔧 高度可定制的拦截规则
+- 🚀 Built on Next.js Middleware
+- 🛡️ Support for request and response interception and modification
+- 🔄 Flexible middleware chain calls
+- 📦 TypeScript support
+- 🎯 Zero configuration, plug and play
+- 🔧 Highly customizable interception rules
 
-## 安装
+## Installation
 
-使用 pnpm 安装依赖：
+Install dependencies using pnpm:
 
 ```bash
-pnpm install
+pnpm add nextjs-interceptor
 ```
 
-## 使用方法
+## Usage
 
-1. 在你的 Next.js 项目中创建 `middleware.ts` 文件：
+1. Create a `middleware.ts` file in your Next.js project:
 
 ```typescript
-import { createInterceptor } from 'nextjs-interceptor';
+import { NextResponse } from "next/server";
+import { interceptorRegistry } from "nextjs-interceptor";
+export { interceptorMiddleware as middleware } from "nextjs-interceptor";
 
-// 创建拦截器实例
-const interceptor = createInterceptor();
+// Authentication interceptor
+interceptorRegistry.use(
+  {
+    id: "auth",
+    pattern: "/demo/*",
+    priority: 1,
+  },
+  async ({ request }) => { 
+    const token = request.headers.get("authorization");
+    if (!token) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    // Returning null automatically continues to the next interceptor
+    return null;
+  }
+);
 
-// 配置拦截规则
-export default interceptor
-  .match('/api/*')
-  .use(async (req, res, next) => {
-    // 在这里处理请求
-    await next();
-    // 在这里处理响应
-  });
-
-// 配置匹配路径
+// Configure matching paths: intercept most addresses, which can then be handed over to InterceptorRegistry for processing
 export const config = {
-  matcher: '/:path*',
+  matcher: [
+    /*
+     * Match all request paths except for the ones starting with:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     */
+    "/((?!_next/static|_next/image|favicon.ico).*)",
+  ],
 };
+
 ```
 
-## 开发
+## Development
 
 ```bash
-# 启动开发服务器
+# Start the development server
 pnpm dev
 
-# 构建项目
+# Build the project
 pnpm build
 
-# 运行测试
+# Run tests
 pnpm test
 ```
 
-## 许可证
+## License
 
 ISC
 
-## 作者
+## Author
 
 liuhuapiaoyuan
