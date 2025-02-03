@@ -2,12 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 
 /**
  * 拦截器处理函数类型
- * @param context - 拦截器上下文
- * @param context.request - 请求对象
+ * @param request - 请求对象(NextAuthRequest/NextRequest)
  */
-type InterceptorHandler = (context: {
-  request: NextRequest;
-}) => Promise<NextResponse | null>;
+type InterceptorHandler<T> = ( request: T) => Promise<NextResponse | void>;
 
 /**
  * 拦截器配置接口
@@ -33,21 +30,21 @@ interface InterceptorConfig {
 /** 
  * 已注册的拦截器接口
  */
-interface RegisteredInterceptor {
+interface RegisteredInterceptor<T> {
   /** 拦截器配置 */
   config: InterceptorConfig;
   /** 拦截器处理函数 */
-  handler: InterceptorHandler;
+  handler: InterceptorHandler<T>;
 }
 
-class InterceptorRegistry {
-  private interceptors: Map<string, RegisteredInterceptor> = new Map();
+class InterceptorRegistry<T extends NextRequest = NextRequest> {
+  private interceptors: Map<string, RegisteredInterceptor<T>> = new Map();
 
-  use(config: InterceptorConfig, handler: InterceptorHandler) {
+  use(config: InterceptorConfig, handler: InterceptorHandler<T>) {
     if (this.interceptors.has(config.id)) {
       console.warn(`拦截器 ${config.id} 已存在，将被覆盖`);
     }
-    
+
     this.interceptors.set(config.id, {
       config: {
         ...config,
@@ -68,13 +65,10 @@ class InterceptorRegistry {
     return this.getPatterns();
   }
 
-  async run(req: NextRequest): Promise<NextResponse | null> {
-    return this.handle(req);
-  }
 
-  private async handle(request: NextRequest): Promise<NextResponse | null> {
+  async handle(request: T): Promise<NextResponse | void> {
     const sortedInterceptors = this.getSortedInterceptors();
-    
+
     // 依次执行每个拦截器
     for (const interceptor of sortedInterceptors) {
       // 如果拦截器不匹配当前请求，跳过
@@ -82,7 +76,7 @@ class InterceptorRegistry {
         continue;
       }
       // 执行拦截器
-      const response = await interceptor.handler({ request });
+      const response = await interceptor.handler(request);
 
       // 如果拦截器返回了 Response，直接返回结果
       // 如果返回 null，继续执行下一个拦截器
@@ -92,10 +86,10 @@ class InterceptorRegistry {
     }
 
     // 所有拦截器都执行完了，返回 null
-    return null;
+    return;
   }
 
-  private getSortedInterceptors(): RegisteredInterceptor[] {
+  private getSortedInterceptors(): RegisteredInterceptor<T>[] {
     return Array.from(this.interceptors.values())
       .sort((a, b) => (a.config.priority || 0) - (b.config.priority || 0));
   }
@@ -106,7 +100,7 @@ class InterceptorRegistry {
   ): boolean {
     const patterns = Array.isArray(pattern) ? pattern : [pattern];
     const pathname = req.nextUrl.pathname;
-    
+
     return patterns.some((p) => {
       if (typeof p === "string") {
         return new RegExp(p).test(pathname);
@@ -186,4 +180,4 @@ if (process.env.NODE_ENV !== "production")
   globalThis.interceptorRegistry = interceptorRegistry;
 
 export { interceptorRegistry };
-export const interceptorMiddleware = interceptorRegistry.run.bind(interceptorRegistry)
+export const interceptorMiddleware = interceptorRegistry.handle.bind(interceptorRegistry)
