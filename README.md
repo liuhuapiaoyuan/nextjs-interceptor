@@ -62,6 +62,42 @@ export const config = {
 
 ```
 
+2.Play With `auth.js`,you can customize the request type like `NextAuthRequest` in the following way:
+
+```typescript
+import { NextResponse } from "next/server";
+import { InterceptorRegistry } from "nextjs-interceptor";
+export { interceptorMiddleware as middleware } from "nextjs-interceptor";
+
+// You can use custom request type
+const interceptorRegistry = new InterceptorRegistry<NextAuthRequest>()
+
+// Authentication interceptor
+interceptorRegistry.use(
+  {
+    id: "auth",
+    pattern: "/demo/*",
+    priority: 1,
+  },
+  async ({ request }) => { 
+      if (!request.auth?.user) {
+      return NextResponse.rewrite(new URL('/auth/signin?callbackUrl=/user', request.url))
+    }
+  }
+);
+// Don't forget to export the middleware
+export const middleware = auth(async request => {
+  return interceptorRegistry.handle(request)
+})
+
+export const config = {
+  matcher: [ 
+    "/((?!_next/static|_next/image|favicon.ico).*)",
+  ],
+};
+
+```
+
 ## Development
 
 ```bash
