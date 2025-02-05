@@ -1,10 +1,10 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextFetchEvent, NextRequest, NextResponse } from "next/server";
 
 /**
  * 拦截器处理函数类型
  * @param request - 请求对象(NextAuthRequest/NextRequest)
  */
-type InterceptorHandler<T> = ( request: T) => Promise<NextResponse | void>;
+type InterceptorHandler<T> = ( request: T ,event?: NextFetchEvent) => Promise<NextResponse | void>;
 
 /**
  * 拦截器配置接口
@@ -66,7 +66,7 @@ class InterceptorRegistry<T extends NextRequest = NextRequest> {
   }
 
 
-  async handle(request: T): Promise<NextResponse | void> {
+  async handle(request: T,event?: NextFetchEvent): Promise<NextResponse | void> {
     const sortedInterceptors = this.getSortedInterceptors();
 
     // 依次执行每个拦截器
@@ -76,7 +76,7 @@ class InterceptorRegistry<T extends NextRequest = NextRequest> {
         continue;
       }
       // 执行拦截器
-      const response = await interceptor.handler(request);
+      const response = await interceptor.handler(request , event);
 
       // 如果拦截器返回了 Response，直接返回结果
       // 如果返回 null，继续执行下一个拦截器

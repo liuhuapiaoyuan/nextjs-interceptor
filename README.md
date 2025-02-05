@@ -98,6 +98,31 @@ export const config = {
 
 ```
 
+3.Support `NextFetchEvent`
+
+```typescript
+import { NextResponse } from "next/server";
+import { interceptorRegistry } from "nextjs-interceptor";
+interceptorRegistry.use(
+  {
+    id: 'logger',
+    pattern: '/*',
+  },
+  async (req,event) => {
+    event.waitUntil(
+    fetch('https://my-analytics-platform.com', {
+      method: 'POST',
+      body: JSON.stringify({ pathname: req.nextUrl.pathname }),
+      })
+    )
+  }
+)
+
+export const middleware = interceptorRegistry.handle
+```
+
+
+
 ## Development
 
 ```bash
