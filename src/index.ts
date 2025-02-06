@@ -1,11 +1,11 @@
-import { NextFetchEvent, NextRequest } from "next/server";
+import { NextFetchEvent, NextRequest, NextResponse } from "next/server";
 
-type ReturnResponse<T> = void | Response | T | Promise<void | Response | T>
+type ReturnResponse = void | Response|NextResponse  | Promise<void | Response |NextResponse >
 /**
  * 拦截器处理函数类型
  * @param request - 请求对象(NextAuthRequest/NextRequest)
  */
-type InterceptorHandler<T> = ( request: T ,event?: NextFetchEvent) => ReturnResponse<T>
+type InterceptorHandler<T> = ( request: T ,event?: NextFetchEvent) => ReturnResponse 
 
 /**
  * 拦截器配置接口
@@ -67,7 +67,7 @@ export class InterceptorRegistry<T extends NextRequest = NextRequest> {
   }
 
 
-  async handle(request: T,event?: NextFetchEvent): Promise<ReturnResponse<T>> {
+  async handle(request: T,event?: NextFetchEvent): Promise<Awaited<ReturnResponse>> {
     const sortedInterceptors = this.getSortedInterceptors();
 
     // 依次执行每个拦截器

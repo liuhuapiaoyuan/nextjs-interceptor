@@ -1,6 +1,6 @@
 {
   "name": "nextjs-interceptor",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "A powerful and flexible interceptor middleware for Next.js applications, providing seamless request/response manipulation capabilities",
   "main": "dist/index.js",
   "module": "dist/index.js",
