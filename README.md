@@ -121,7 +121,55 @@ interceptorRegistry.use(
 export const middleware = interceptorRegistry.handle
 ```
 
+4.Support exclude patterns
 
+You can use the `exclude` option to exclude specific paths from interception:
+
+```typescript
+import { NextResponse } from "next/server";
+import { interceptorRegistry } from "nextjs-interceptor";
+
+// This interceptor will match all /api/* paths except /api/public/*
+interceptorRegistry.use(
+  {
+    id: "api-auth",
+    pattern: "/api/*",
+    exclude: "/api/public/*", // Exclude public API routes
+    priority: 1,
+  },
+  async (request) => {
+    const token = request.headers.get("authorization");
+    if (!token) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    return; // Continue to next interceptor
+  }
+);
+
+// You can also use arrays and regex patterns for exclude
+interceptorRegistry.use(
+  {
+    id: "admin-protection",
+    pattern: "/admin/*",
+    exclude: [
+      "/admin/login",
+      "/admin/public/*",
+      /\/admin\/assets\/.*/  // Regex pattern
+    ],
+    priority: 2,
+  },
+  async (request) => {
+    // Check admin authentication
+    const isAdmin = checkAdminAuth(request);
+    if (!isAdmin) {
+      return NextResponse.redirect(new URL('/admin/login', request.url));
+    }
+    return;
+  }
+);
+
+export { interceptorMiddleware as middleware } from "nextjs-interceptor";
+```
 
 ## Development
 

@@ -1,0 +1,120 @@
+# Next.js Interceptor 项目 Cursor 规则
+
+## 项目概述
+- 项目名称: nextjs-interceptor
+- 版本: 1.0.8
+- 类型: Next.js 中间件拦截器库
+- 语言: TypeScript
+- 包管理器: pnpm (主要), npm (兼容)
+- Node.js 版本: >=18.17.0
+
+## 项目结构
+```
+nextjs-interceptor/
+├── src/
+│   └── index.ts        # 主要导出文件
+├── dist/               # 编译输出目录
+├── package.json        # 项目配置
+├── tsconfig.json       # TypeScript 配置
+├── pnpm-lock.yaml      # pnpm 锁文件
+├── README.md           # 英文文档
+├── README.ZH.md        # 中文文档
+└── LICENSE             # ISC 许可证
+```
+
+## 编码规范
+
+### TypeScript 规范
+- 严格模式启用 (strict: true)
+- 使用 ES2020 目标
+- 模块系统: ESNext
+- 声明文件生成: 启用
+- 所有导出类型必须有明确的类型声明
+
+### 命名约定
+- 类名: PascalCase (如: InterceptorRegistry)
+- 接口名: PascalCase, 使用描述性名称 (如: InterceptorConfig)
+- 函数名: camelCase (如: interceptorMiddleware)
+- 变量名: camelCase
+- 常量名: UPPER_SNAKE_CASE
+- 类型别名: PascalCase
+
+### 代码组织
+- 单一文件导出: src/index.ts
+- 类型定义在文件顶部
+- 类和接口分离清晰
+- 使用 Map 进行高效查找
+- 支持泛型以提高代码复用性
+
+## 核心功能模式
+
+### 拦截器模式
+- 使用注册机制管理拦截器
+- 支持优先级排序 (数字越小优先级越高)
+- 模式匹配: 字符串、正则表达式、数组
+- 条件匹配: headers, query, cookies
+
+### 中间件集成
+- 兼容 Next.js middleware
+- 支持 NextRequest, NextResponse
+- 支持 NextFetchEvent
+- 支持异步处理
+
+### 响应处理
+- 返回 void: 继续执行下一个拦截器
+- 返回 Response/NextResponse: 立即返回结果
+- 支持 Promise 包装
+
+## 开发约定
+
+### 错误处理
+- 使用 console.warn 进行警告
+- 优雅降级处理
+- 不抛出异常，返回适当的响应
+
+### 性能考虑
+- 使用 Map 存储拦截器提高查找性能
+- 惰性排序拦截器
+- 避免不必要的正则表达式创建
+
+### 兼容性
+- Next.js 15.1.6 peerDependency
+- Node.js >=18.17.0
+- TypeScript 5.3.3+
+
+## 文档要求
+- 所有公共 API 必须有 JSDoc 注释
+- 类型参数需要说明
+- 示例代码保持最新
+- 中英文文档同步更新
+
+## 测试要求
+- 单元测试覆盖核心功能
+- 集成测试验证 Next.js 兼容性
+- 性能测试验证拦截器性能
+- 边界条件测试
+
+## 构建和发布
+- 使用 TypeScript 编译器 (tsc)
+- 输出到 dist/ 目录
+- 包含类型定义文件
+- 发布前运行完整测试套件
+
+## 代码审查要点
+1. 类型安全性检查
+2. 性能影响评估
+3. 向后兼容性验证
+4. 文档同步性检查
+5. 示例代码可运行性验证
+
+## 依赖管理
+- 最小化运行时依赖
+- Next.js 作为 peerDependency
+- 开发依赖版本锁定
+- 定期更新依赖版本
+
+## 安全考虑
+- 输入验证和清理
+- 避免代码注入风险
+- 正则表达式 ReDoS 防护
+- 敏感信息处理规范 

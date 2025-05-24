@@ -60,6 +60,56 @@ export const config = {
 
 ```
 
+2. 支持排除模式（exclude）
+
+你可以使用 `exclude` 选项来排除特定路径，避免被拦截：
+
+```typescript
+import { NextResponse } from "next/server";
+import { interceptorRegistry } from "nextjs-interceptor";
+
+// 这个拦截器会匹配所有 /api/* 路径，但排除 /api/public/*
+interceptorRegistry.use(
+  {
+    id: "api-auth",
+    pattern: "/api/*",
+    exclude: "/api/public/*", // 排除公共 API 路由
+    priority: 1,
+  },
+  async (request) => {
+    const token = request.headers.get("authorization");
+    if (!token) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    return; // 继续执行下一个拦截器
+  }
+);
+
+// 你也可以使用数组和正则表达式来定义排除模式
+interceptorRegistry.use(
+  {
+    id: "admin-protection",
+    pattern: "/admin/*",
+    exclude: [
+      "/admin/login",
+      "/admin/public/*",
+      /\/admin\/assets\/.*/  // 正则表达式模式
+    ],
+    priority: 2,
+  },
+  async (request) => {
+    // 检查管理员权限
+    const isAdmin = checkAdminAuth(request);
+    if (!isAdmin) {
+      return NextResponse.redirect(new URL('/admin/login', request.url));
+    }
+    return;
+  }
+);
+
+export { interceptorMiddleware as middleware } from "nextjs-interceptor";
+```
+
 ## 开发
 
 ```bash

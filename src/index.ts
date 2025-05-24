@@ -15,6 +15,8 @@ interface InterceptorConfig {
   id: string;
   /** 匹配模式：字符串、正则表达式或它们的数组 */
   pattern: string | RegExp | Array<string | RegExp>;
+  /** 排除模式：字符串、正则表达式或它们的数组（可选） */
+  exclude?: string | RegExp | Array<string | RegExp>;
   /** 优先级：数字越小优先级越高 */
   priority?: number;
   /** 匹配条件 */
@@ -62,6 +64,18 @@ export class InterceptorRegistry<T extends NextRequest = NextRequest> {
     );
   }
 
+  /**
+   * 获取所有拦截器的排除模式
+   * @returns 排除模式数组
+   */
+  getExcludePatterns() {
+    return Array.from(this.interceptors.values())
+      .filter((i) => i.config.exclude)
+      .flatMap((i) =>
+        Array.isArray(i.config.exclude) ? i.config.exclude : [i.config.exclude!]
+      );
+  }
+
   getMatchers() {
     return this.getPatterns();
   }
@@ -103,6 +117,29 @@ export class InterceptorRegistry<T extends NextRequest = NextRequest> {
     const pathname = req.nextUrl.pathname;
 
     return patterns.some((p) => {
+      if (typeof p === "string") {
+        return new RegExp(p).test(pathname);
+      }
+      return p.test(pathname);
+    });
+  }
+
+  /**
+   * 检查请求路径是否匹配排除模式
+   * @param req - Next.js 请求对象
+   * @param exclude - 排除模式：字符串、正则表达式或它们的数组
+   * @returns 如果匹配任意一个排除模式则返回 true
+   */
+  private matchesExcludePattern(
+    req: NextRequest,
+    exclude?: string | RegExp | Array<string | RegExp>
+  ): boolean {
+    if (!exclude) return false;
+    
+    const excludePatterns = Array.isArray(exclude) ? exclude : [exclude];
+    const pathname = req.nextUrl.pathname;
+
+    return excludePatterns.some((p) => {
       if (typeof p === "string") {
         return new RegExp(p).test(pathname);
       }
@@ -163,6 +200,7 @@ export class InterceptorRegistry<T extends NextRequest = NextRequest> {
   private matches(req: NextRequest, config: InterceptorConfig): boolean {
     return (
       this.matchesPattern(req, config.pattern) &&
+      !this.matchesExcludePattern(req, config.exclude) &&
       this.matchesConditions(req, config.conditions)
     );
   }
